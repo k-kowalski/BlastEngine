@@ -1,7 +1,14 @@
-# BlastEngine
+# Blast Engine
 
-Simple game engine in C++
+Game engine in C++
 
-used technologies:
-- DirectX 12
-- Active Template Library
+# Features:
+- FBX files import (OpenFBX)
+- texture files import (stbimage)
+- Realtime input, UV mapping and many more!
+
+# Used technologies:
+- DirectX 11
+
+# License:
+MIT
