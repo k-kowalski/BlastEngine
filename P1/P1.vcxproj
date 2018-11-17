@@ -164,6 +164,7 @@
     <ClInclude Include="OpenFBX\miniz.h" />
     <ClInclude Include="OpenFBX\ofbx.h" />
     <ClInclude Include="Platform.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="stb_image\stb_image.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -187,6 +188,7 @@
     <ClCompile Include="OpenFBX\ofbx.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Platform.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

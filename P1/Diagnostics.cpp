@@ -3,13 +3,13 @@
 
 namespace Diagnostics
 {
-	void messageFromHRESULT(HRESULT result)
+	void messageBoxInfoFromHRESULT(HRESULT result)
 	{
 		_com_error err(result);
 		MessageBox(0, err.ErrorMessage(), L"RESULT", MB_OK);
 	}
 
-	void message(std::string message)
+	void messageBoxInfo(std::string message)
 	{
 		if (&message == nullptr || message.c_str() == nullptr)
 		{

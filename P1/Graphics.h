@@ -44,6 +44,5 @@ namespace Graphics
 
 	ID3D11Device* getGraphicsDevice();
 
-	void loadScene(std::string fileName);
 	void renderModel(Model* model);
 }

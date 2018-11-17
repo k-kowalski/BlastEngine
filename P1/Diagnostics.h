@@ -4,6 +4,6 @@
 
 namespace Diagnostics
 {
-	void messageFromHRESULT(HRESULT result);
-	void message(std::string message);
+	void messageBoxInfoFromHRESULT(HRESULT result);
+	void messageBoxInfo(std::string message);
 }

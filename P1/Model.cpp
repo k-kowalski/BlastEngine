@@ -13,7 +13,7 @@ Graphics::Model::Model(std::string name, std::string meshFilePath, std::unique_p
 
 	if (meshFilePath.compare("") == 0 || meshFilePath.find(".fbx") == std::string::npos)
 	{
-		Diagnostics::message("Invalid file.");
+		Diagnostics::messageBoxInfo("Invalid file.");
 		return;
 	}
 
@@ -118,8 +118,31 @@ Graphics::Model::Model(std::string name, std::string meshFilePath, std::unique_p
 	delete[] content;
 	CloseHandle(fileHandle);
 
-	// setup GPU buffers
-	ID3D11Device* graphicsDevice = getGraphicsDevice();
+	// TODO:
+	// move GPU resources setup to just before displaying on specific device
+	setupGPUResources(Graphics::getGraphicsDevice());
+}
+
+Graphics::Model::Model(std::string name, std::vector<Graphics::Vertex> vertices, std::vector<UINT> vertexIndices, XMMATRIX objectWorldMatrix, std::unique_ptr<Material>& material)
+{
+	this->name = name;
+	this->material = std::move(material);
+	this->objectWorldMatrix = objectWorldMatrix;
+	this->vertices = vertices;
+	this->vertexIndices = vertexIndices;
+
+	// TODO:
+	// move GPU resources setup to just before displaying on specific device
+	setupGPUResources(Graphics::getGraphicsDevice());
+}
+
+Graphics::Model::~Model()
+{
+
+}
+
+void Graphics::Model::setupGPUResources(ID3D11Device* graphicsDevice)
+{
 
 	// vertex buffer update
 	unsigned int vertexBufferSize = static_cast<unsigned int>(vertices.size()) * sizeof(Vertex);
@@ -154,9 +177,4 @@ Graphics::Model::Model(std::string name, std::string meshFilePath, std::unique_p
 	indexBufferData.pSysMem = vertexIndices.data();
 
 	graphicsDevice->CreateBuffer(&indexBufferDesc, &indexBufferData, &indexBufferHandle);
-}
-
-Graphics::Model::~Model()
-{
-
 }

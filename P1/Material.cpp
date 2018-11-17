@@ -19,8 +19,8 @@ Graphics::Material::Material(std::vector<std::unique_ptr<Texture2D>>& textures, 
 	{
 		if (errorBlob != nullptr)
 		{
-			Diagnostics::message("Compilation of vertex shader failed. See error in next message.");
-			Diagnostics::message(static_cast<char*>(errorBlob->GetBufferPointer()));
+			Diagnostics::messageBoxInfo("Compilation of vertex shader failed. See error in next message.");
+			Diagnostics::messageBoxInfo(static_cast<char*>(errorBlob->GetBufferPointer()));
 			errorBlob->Release();
 			return;
 		}
@@ -32,8 +32,8 @@ Graphics::Material::Material(std::vector<std::unique_ptr<Texture2D>>& textures, 
 	{
 		if (errorBlob != nullptr)
 		{
-			Diagnostics::message("Compilation of pixel shader failed. See error in next message.");
-			Diagnostics::message(static_cast<char*>(errorBlob->GetBufferPointer()));
+			Diagnostics::messageBoxInfo("Compilation of pixel shader failed. See error in next message.");
+			Diagnostics::messageBoxInfo(static_cast<char*>(errorBlob->GetBufferPointer()));
 			errorBlob->Release();
 			return;
 		}
@@ -44,14 +44,14 @@ Graphics::Material::Material(std::vector<std::unique_ptr<Texture2D>>& textures, 
 	result = graphicsDevice->CreateVertexShader(vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), nullptr, &vertexShader);
 	if (FAILED(result))
 	{
-		Diagnostics::message("Creation of vertex shader - failed.");
+		Diagnostics::messageBoxInfo("Creation of vertex shader - failed.");
 		return;
 	}
 
 	result = graphicsDevice->CreatePixelShader(pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize(), nullptr, &pixelShader);
 	if (FAILED(result))
 	{
-		Diagnostics::message("Creation of pixel shader - failed.");
+		Diagnostics::messageBoxInfo("Creation of pixel shader - failed.");
 		return;
 	}
 
@@ -59,7 +59,7 @@ Graphics::Material::Material(std::vector<std::unique_ptr<Texture2D>>& textures, 
 	result = graphicsDevice->CreateInputLayout(inputLayoutDesc.data(), static_cast<UINT>(inputLayoutDesc.size()), vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), &vertexInputLayout);
 	if (FAILED(result))
 	{
-		Diagnostics::message("Creation of input layout - failed.");
+		Diagnostics::messageBoxInfo("Creation of input layout - failed.");
 		return;
 	}
 
@@ -76,7 +76,7 @@ Graphics::Material::Material(std::vector<std::unique_ptr<Texture2D>>& textures, 
 	result = graphicsDevice->CreateSamplerState(&textureSamplerDesc, &samplerState);
 	if (FAILED(result))
 	{
-		Diagnostics::message("Failed to create texture sampler state.");
+		Diagnostics::messageBoxInfo("Failed to create texture sampler state.");
 		return;
 	}
 }

@@ -22,6 +22,9 @@ namespace Graphics
 		unsigned int indexBufferCapacity;
 
 		Model(std::string name, std::string meshFilePath, std::unique_ptr<Material>& material);
+		Model(std::string name, std::vector<Graphics::Vertex> vertices, std::vector<UINT> vertexIndices, XMMATRIX objectWorldMatrix, std::unique_ptr<Material>& material);
 		~Model();
+	private:
+		void setupGPUResources(ID3D11Device* graphicsDevice);
 	};
 }

@@ -1,0 +1,16 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+P1/Debug
+P1/x64
+P2
+x64
+Camera.cpp
+game_engine.xcf
+
+
+
+.gitignore
+.vs
+.git

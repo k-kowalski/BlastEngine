@@ -3,7 +3,6 @@
 #include <wrl.h>
 #include "xnamath.h"
 #include <stdio.h>
-#include "OpenFBX/ofbx.h"
 #include "Graphics.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx11.h"
@@ -13,9 +12,9 @@
 #include <set>
 #include <memory>
 #include "Model.h"
-#include <direct.h>
+#include "Scene.h"
 
-std::vector<std::unique_ptr<Graphics::Model>> models;
+Scene currentScene;
 constexpr float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
 
 namespace GUI
@@ -47,34 +46,35 @@ namespace GUI
 		ImGui::NewFrame();
 
 		ImGui::Begin("Control panel");
-//		if (ImGui::Button("Load texture"))
-//		{
-//			auto fileName = Platform::pickFileDialog(
-//				Graphics::getRenderWindowHandle(), "Image\0*.bmp;*.png;*.jpg;*.jpeg;*.tga\0");
-//
-//			if (fileName.c_str() != nullptr && fileName.compare("") != 0)
-//			{
-//				Graphics::loadScene(fileName);
-//			}
-//		}
+		if (ImGui::Button("Load scene from file"))
+		{
+			currentScene = Scene(R"(D:\COMMON\pracownia\VisualStudio\BlastEngine\data\1.scene)");
+		}
+
+		if (ImGui::Button("Dump scene to file"))
+		{
+			currentScene.writeToFile(R"(D:\COMMON\pracownia\VisualStudio\BlastEngine\data\1.scene)");
+		}
 
 		if (ImGui::Button("Init scene"))
 		{
-			// plane
+			// cube
 			std::vector<std::unique_ptr<Graphics::Texture2D>> cubeTextures;
 			cubeTextures.push_back(
 				std::make_unique<Graphics::Texture2D>(R"(..\data\textures\grass.jpg)")
 			);
 
 			std::unique_ptr<Graphics::Material> cubeMaterial = std::make_unique<Graphics::Material>(cubeTextures, "texture.hlsl");
-			std::unique_ptr<Graphics::Model> cubeModel =  std::make_unique<Graphics::Model>("cube", R"(..\data\models\plane.fbx)", cubeMaterial);
+			std::unique_ptr<Graphics::Model> cubeModel =  std::make_unique<Graphics::Model>("plane", R"(..\data\models\plane.fbx)", cubeMaterial);
 
 			cubeModel->objectWorldMatrix *= XMMatrixTranslation(0.0f, 0.0f, -1.2f);
 			cubeModel->objectWorldMatrix *= XMMatrixScaling(10.0f, 10.0f, 1.0f);
 
-			models.push_back(
+			currentScene.models.push_back(
 				std::move(cubeModel)
 			);
+
+
 			// fence
 			std::vector<std::unique_ptr<Graphics::Texture2D>> fenceTextures;
 			fenceTextures.push_back(
@@ -84,7 +84,7 @@ namespace GUI
 			std::unique_ptr<Graphics::Material> fenceMaterial = std::make_unique<Graphics::Material>(fenceTextures, "texture.hlsl");
 
 			std::unique_ptr<Graphics::Model> fenceModel = std::make_unique<Graphics::Model>("fence", R"(..\data\models\fence_1.fbx)", fenceMaterial);
-			models.push_back(
+			currentScene.models.push_back(
 				std::move(fenceModel)
 			);
 			// rock
@@ -99,7 +99,7 @@ namespace GUI
 
 			rockModel->objectWorldMatrix *= XMMatrixTranslation(1.0f, -3.0f, -0.5f);
 
-			models.push_back(
+			currentScene.models.push_back(
 				std::move(rockModel)
 			);
 		}
@@ -109,7 +109,7 @@ namespace GUI
 		}
 		if (ImGui::Button("Move rock!"))
 		{
-			for (auto& model : models)
+			for (auto& model : currentScene.models)
 			{
 				if (model->name._Equal("rock"))
 				{
@@ -383,17 +383,6 @@ namespace Graphics
 		return graphicsDevice;
 	}
 
-	void loadScene(std::string fileName)
-	{
-		std::vector<std::unique_ptr<Texture2D>> txts;
-		txts.push_back(
-			std::make_unique<Texture2D>(fileName)
-		);
-
-		Graphics::Material m(txts, "texture.hlsl");
-		setMaterial(&m);
-	}
-
 	void renderModel(Model* model)
 	{
 		// transformation
@@ -433,7 +422,7 @@ namespace Graphics
 		graphicsDeviceContext->ClearRenderTargetView(renderTargetView, clearColor);
 		graphicsDeviceContext->ClearDepthStencilView(depthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0, 0);
 
-		for (std::unique_ptr<Model>& model : models)
+		for (std::unique_ptr<Model>& model : currentScene.models)
 		{
 			renderModel(model.get());
 		}
