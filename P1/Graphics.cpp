@@ -11,6 +11,7 @@
 #include "Diagnostics.h"
 #include <set>
 #include <memory>
+#include <algorithm>
 #include "Model.h"
 #include "Scene.h"
 
@@ -27,7 +28,7 @@ namespace GUI
 
 		ImGui_ImplWin32_Init(renderWindowHandle);
 		ImGui_ImplDX11_Init(graphicsDevice, graphicsDeviceContext);
-		ImGui::StyleColorsClassic();
+		ImGui::StyleColorsLight();
 	}
 
 	void shutdownGUI()
@@ -39,96 +40,209 @@ namespace GUI
 		ImGui::DestroyContext();
 	}
 
+	void displayTransformation(XMMATRIX& transformationMatrix)
+	{
+		uint8_t modified = 0;
+
+		XMVECTOR translation;
+		XMVECTOR rotation;
+		XMVECTOR scale;
+		XMMatrixDecompose(&scale, &rotation, &translation, transformationMatrix);
+
+		Math::Vector4 quat;
+		quat.x = rotation.m128_f32[0];
+		quat.y = rotation.m128_f32[1];
+		quat.z = rotation.m128_f32[2];
+		quat.w = rotation.m128_f32[3];
+
+		// thanks to LumixEngine
+		Math::Vector3 euler;
+		float check = 2.0f * (-quat.y * quat.z + quat.w * quat.x);
+		if (check < -0.995f)
+		{
+			euler = Math::Vector3{
+				-Math::PI * 0.5f, 0.0f,
+				-atan2f(2.0f * (quat.x * quat.z - quat.w * quat.y),
+				1.0f - 2.0f * (quat.y * quat.y + quat.z * quat.z))};
+		}
+		else if (check > 0.995f)
+		{
+			euler = Math::Vector3{
+				Math::PI * 0.5f, 0.0f,
+				atan2f(2.0f * (quat.x * quat.z - quat.w * quat.y),
+				1.0f - 2.0f * (quat.y * quat.y + quat.z * quat.z))};
+		}
+		else
+		{
+			euler = Math::Vector3{
+				asinf(check),
+				atan2f(2.0f * (quat.x * quat.z + quat.w * quat.y), 1.0f - 2.0f * (quat.x * quat.x + quat.y * quat.y)),
+				atan2f(2.0f * (quat.x * quat.y + quat.w * quat.z), 1.0f - 2.0f * (quat.x * quat.x + quat.z * quat.z))};
+		}
+
+		euler.x = Math::radiansToDegrees(euler.x);
+		euler.y = Math::radiansToDegrees(euler.y);
+		euler.z = Math::radiansToDegrees(euler.z);
+
+		ImGui::Text("Object transform:");
+		ImGui::Columns(4, "transform");
+		ImGui::Separator();
+		ImGui::Text(""); ImGui::NextColumn();
+		ImGui::Text("X"); ImGui::NextColumn();
+		ImGui::Text("Y"); ImGui::NextColumn();
+		ImGui::Text("Z"); ImGui::NextColumn();
+		ImGui::Separator();
+
+		ImGui::Text("Translation"); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##TranslationX", &translation.m128_f32[0], 0.005f); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##TranslationY", &translation.m128_f32[1], 0.005f); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##TranslationZ", &translation.m128_f32[2], 0.005f); ImGui::NextColumn();
+		ImGui::Separator();
+
+		ImGui::Text("Rotation"); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##RotationX", &euler.x, 0.01f); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##RotationY", &euler.y, 0.01f); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##RotationZ", &euler.z, 0.01f); ImGui::NextColumn();
+		ImGui::Separator();
+
+		ImGui::Text("Scale"); ImGui::NextColumn();		
+		modified += ImGui::DragFloat("##ScaleX", &scale.m128_f32[0], 0.005f); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##ScaleY", &scale.m128_f32[1], 0.005f); ImGui::NextColumn();
+		modified += ImGui::DragFloat("##ScaleZ", &scale.m128_f32[2], 0.005f); ImGui::NextColumn();
+		ImGui::Separator();
+
+
+		if (modified > 0)
+		{
+			if (euler.x <= -90.0f || euler.x >= 90.0f)
+			{		
+				euler.y = 0;
+			}
+			euler.x = Math::degreesToRadians(std::clamp(euler.x, -90.0f, 90.0f));
+			euler.y = Math::degreesToRadians(fmodf(euler.y + 180, 360.0f) - 180);
+			euler.z = Math::degreesToRadians(fmodf(euler.z + 180, 360.0f) - 180);
+
+			transformationMatrix = XMMatrixIdentity() * XMMatrixScalingFromVector(scale) * XMMatrixRotationRollPitchYaw(euler.x, euler.y, euler.z) * XMMatrixTranslationFromVector(translation);
+		}
+	}
+
 	void runGUI()
 	{
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::Begin("Control panel");
-		if (ImGui::Button("Load scene from file"))
+		
+		if (ImGui::Begin("Control panel", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize))
 		{
-			currentScene = Scene(R"(D:\COMMON\pracownia\VisualStudio\BlastEngine\data\1.scene)");
-		}
-
-		if (ImGui::Button("Dump scene to file"))
-		{
-			currentScene.writeToFile(R"(D:\COMMON\pracownia\VisualStudio\BlastEngine\data\1.scene)");
-		}
-
-		if (ImGui::Button("Init scene"))
-		{
-			// cube
-			std::vector<std::unique_ptr<Graphics::Texture2D>> cubeTextures;
-			cubeTextures.push_back(
-				std::make_unique<Graphics::Texture2D>(R"(..\data\textures\grass.jpg)")
-			);
-
-			std::unique_ptr<Graphics::Material> cubeMaterial = std::make_unique<Graphics::Material>(cubeTextures, "texture.hlsl");
-			std::unique_ptr<Graphics::Model> cubeModel =  std::make_unique<Graphics::Model>("plane", R"(..\data\models\plane.fbx)", cubeMaterial);
-
-			cubeModel->objectWorldMatrix *= XMMatrixTranslation(0.0f, 0.0f, -1.2f);
-			cubeModel->objectWorldMatrix *= XMMatrixScaling(10.0f, 10.0f, 1.0f);
-
-			currentScene.models.push_back(
-				std::move(cubeModel)
-			);
-
-
-			// fence
-			std::vector<std::unique_ptr<Graphics::Texture2D>> fenceTextures;
-			fenceTextures.push_back(
-				std::make_unique<Graphics::Texture2D>(R"(..\data\textures\fence_1.png)")
-			);
-
-			std::unique_ptr<Graphics::Material> fenceMaterial = std::make_unique<Graphics::Material>(fenceTextures, "texture.hlsl");
-
-			std::unique_ptr<Graphics::Model> fenceModel = std::make_unique<Graphics::Model>("fence", R"(..\data\models\fence_1.fbx)", fenceMaterial);
-			currentScene.models.push_back(
-				std::move(fenceModel)
-			);
-			// rock
-			std::vector<std::unique_ptr<Graphics::Texture2D>> rockTextures;
-			rockTextures.push_back(
-				std::make_unique<Graphics::Texture2D>(R"(..\data\textures\rock1.png)")
-			);
-
-			std::unique_ptr<Graphics::Material> rockMaterial = std::make_unique<Graphics::Material>(rockTextures, "texture.hlsl");
-
-			std::unique_ptr<Graphics::Model> rockModel = std::make_unique<Graphics::Model>("rock", R"(..\data\models\rock_1.fbx)", rockMaterial);
-
-			rockModel->objectWorldMatrix *= XMMatrixTranslation(1.0f, -3.0f, -0.5f);
-
-			currentScene.models.push_back(
-				std::move(rockModel)
-			);
-		}
-		if (ImGui::Button("Toggle wireframe mode"))
-		{
-			Graphics::toggleWireframeRendering();
-		}
-		if (ImGui::Button("Move rock!"))
-		{
-			for (auto& model : currentScene.models)
+			if (ImGui::Button("Load scene from file"))
 			{
-				if (model->name._Equal("rock"))
-				{
-					model->objectWorldMatrix *= XMMatrixTranslation(0.3f, 0.0f, 0.0f);
-					break;
-				}
+				currentScene = Scene(R"(..\data\1.scene)");
 			}
+			ImGui::SameLine();
+			if (ImGui::Button("Save scene to file"))
+			{
+				currentScene.writeToFile(R"(..\data\1.scene)");
+			}
+
+			if (ImGui::Button("Init scene"))
+			{
+				// plane
+				std::vector<std::unique_ptr<Graphics::Texture2D>> cubeTextures;
+				cubeTextures.push_back(
+					std::make_unique<Graphics::Texture2D>(R"(..\data\textures\grass.jpg)")
+				);
+
+				std::unique_ptr<Graphics::Material> cubeMaterial = std::make_unique<Graphics::Material>(cubeTextures, "texture.hlsl");
+				std::unique_ptr<Graphics::Model> cubeModel = std::make_unique<Graphics::Model>("plane", R"(..\data\models\plane.fbx)", cubeMaterial);
+
+				cubeModel->objectWorldMatrix *= XMMatrixTranslation(0.0f, 0.0f, -1.2f);
+				cubeModel->objectWorldMatrix *= XMMatrixScaling(10.0f, 10.0f, 1.0f);
+
+				currentScene.models.push_back(
+					std::move(cubeModel)
+				);
+
+
+				// fence
+				std::vector<std::unique_ptr<Graphics::Texture2D>> fenceTextures;
+				fenceTextures.push_back(
+					std::make_unique<Graphics::Texture2D>(R"(..\data\textures\fence_1.png)")
+				);
+
+				std::unique_ptr<Graphics::Material> fenceMaterial = std::make_unique<Graphics::Material>(fenceTextures, "texture.hlsl");
+
+				std::unique_ptr<Graphics::Model> fenceModel = std::make_unique<Graphics::Model>("fence", R"(..\data\models\fence_1.fbx)", fenceMaterial);
+
+				fenceModel->objectWorldMatrix *= XMMatrixRotationRollPitchYaw(0.0f, 0.0f, 3.0f);
+
+				currentScene.models.push_back(
+					std::move(fenceModel)
+				);
+
+				// rock
+				std::vector<std::unique_ptr<Graphics::Texture2D>> rockTextures;
+				rockTextures.push_back(
+					std::make_unique<Graphics::Texture2D>(R"(..\data\textures\rock1.png)")
+				);
+
+				std::unique_ptr<Graphics::Material> rockMaterial = std::make_unique<Graphics::Material>(rockTextures, "texture.hlsl");
+
+				std::unique_ptr<Graphics::Model> rockModel = std::make_unique<Graphics::Model>("rock", R"(..\data\models\rock_1.fbx)", rockMaterial);
+
+				rockModel->objectWorldMatrix *= XMMatrixTranslation(2.0f, -3.0f, -0.5f);
+
+				currentScene.models.push_back(
+					std::move(rockModel)
+				);
+			}
+			if (ImGui::Button("Toggle wireframe mode"))
+			{
+				Graphics::toggleWireframeRendering();
+			}			
 		}
 		ImGui::End();
 
-//		ImGui::Begin("Details");
-//		std::array<char, 128> fileMessage;
-//		sprintf_s(fileMessage.data(), fileMessage.size(), "file:\n%s\n", currentGeometrySourceName.c_str());
-//		ImGui::Text(fileMessage.data());
-//		ImGui::End();
+		// scene
+		if (ImGui::Begin("Scene", nullptr))
+		{
+			static int32_t selected;
+
+			ImGui::ListBox("", &selected, [](void* data, int index, const char** outText)
+			{
+				auto& models = *static_cast<std::vector<std::unique_ptr<Graphics::Model>>*>(data);
+				if (index < 0 || index >= static_cast<int>(models.size())) { return false; }
+
+				*outText = models.at(index)->name.c_str();
+
+				return true;
+
+			},static_cast<void*>(&currentScene.models), currentScene.models.size());
+
+			if ( ! currentScene.models.empty())
+			{
+				auto& selectedModel = currentScene.models[selected];
+
+				// std::array<const char*, 4> transformColumnNames = {
+				// 	"", "Translation", "Rotation", "Scale"
+				// };
+
+				displayTransformation(selectedModel->objectWorldMatrix);
+			}	
+
+
+			// if (ImGui::Button("Translate"))
+			// {
+			// 	currentScene.models[selected]->objectWorldMatrix *= XMMatrixTranslation(0.3f, 0.0f, 0.0f);
+			// }
+		}
+		ImGui::End();
 
 		ImGui::Render();
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
+
+
 
 }
 
@@ -192,11 +306,17 @@ namespace Graphics
 
 
 
-	struct cbPerObject
+	struct ConstantBufferPerObject
 	{
 		XMMATRIX worldViewProjectionMatrix;
 	};
-	cbPerObject cbPerObj;
+	ConstantBufferPerObject cbPerObject;
+	
+	// struct ConstantBufferCamera
+	// {
+	// 	Math::Vector3 target;
+	// };
+	// ConstantBufferCamera cbCamera;
 
 	bool initializeGraphics(HWND renderWindowHandle)
 	{
@@ -294,6 +414,54 @@ namespace Graphics
 		delete defCam;
 	}
 
+	void resizeBuffers(HWND renderWindowHandle)
+	{
+		graphicsDeviceContext->OMSetRenderTargets(0, nullptr, nullptr);
+		renderTargetView->Release();
+
+		HRESULT result;
+		// Preserve the existing buffer count and format.
+		// Automatically choose the width and height to match the client rect for HWNDs.
+		result = swapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+
+
+		ID3D11Texture2D* buffer;
+		result = swapChain->GetBuffer(0, IID_PPV_ARGS(&buffer));
+
+		result = graphicsDevice->CreateRenderTargetView(buffer, nullptr, &renderTargetView);
+		buffer->Release();
+
+		depthStencilView->Release();
+		D3D11_TEXTURE2D_DESC depthStencilDesc;
+		depthStencilDesc.Width = Platform::getClientSpaceWidth(renderWindowHandle);
+		depthStencilDesc.Height = Platform::getClientSpaceHeight(renderWindowHandle);
+		depthStencilDesc.MipLevels = 1;
+		depthStencilDesc.ArraySize = 1;
+		depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+		depthStencilDesc.SampleDesc.Count = 1;
+		depthStencilDesc.SampleDesc.Quality = 0;
+		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthStencilDesc.CPUAccessFlags = 0;
+		depthStencilDesc.MiscFlags = 0;
+		graphicsDevice->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer);
+		graphicsDevice->CreateDepthStencilView(depthStencilBuffer, nullptr, &depthStencilView);
+
+		graphicsDeviceContext->OMSetRenderTargets(1, &renderTargetView, depthStencilView);
+
+		D3D11_VIEWPORT viewport;
+		ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+
+		viewport.TopLeftX = 0.0;
+		viewport.TopLeftY = 0.0;
+		viewport.Width = static_cast<float>(depthStencilDesc.Width);
+		viewport.Height = static_cast<float>(depthStencilDesc.Height);
+		viewport.MinDepth = 0.0;
+		viewport.MaxDepth = 1.0;
+
+		graphicsDeviceContext->RSSetViewports(1, &viewport);
+	}
+
 	bool initializeScene()
 	{
 //		loadGeometry(sampleGeometryFile);
@@ -304,7 +472,7 @@ namespace Graphics
 		D3D11_BUFFER_DESC constantBufferDesc;
 		ZeroMemory(&constantBufferDesc, sizeof(D3D11_BUFFER_DESC));
 		constantBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-		constantBufferDesc.ByteWidth = sizeof(cbPerObject);
+		constantBufferDesc.ByteWidth = sizeof(ConstantBufferPerObject);
 		constantBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		constantBufferDesc.CPUAccessFlags = 0;
 		constantBufferDesc.MiscFlags = 0;
@@ -318,9 +486,9 @@ namespace Graphics
 		graphicsDevice->CreateRasterizerState(&rasterizerStateDesc, &rasterizerState);
 		graphicsDeviceContext->RSSetState(rasterizerState);
 
-		cbPerObj.worldViewProjectionMatrix = XMMatrixTranspose(XMMatrixIdentity() * camView * camProjection);
+		cbPerObject.worldViewProjectionMatrix = XMMatrixTranspose(XMMatrixIdentity() * camView * camProjection);
 
-		graphicsDeviceContext->UpdateSubresource(cbPerObjectBuffer, 0, nullptr, &cbPerObj, 0, 0);
+		graphicsDeviceContext->UpdateSubresource(cbPerObjectBuffer, 0, nullptr, &cbPerObject, 0, 0);
 
 		graphicsDeviceContext->VSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
 
@@ -386,8 +554,8 @@ namespace Graphics
 	void renderModel(Model* model)
 	{
 		// transformation
-		cbPerObj.worldViewProjectionMatrix = XMMatrixTranspose(model->objectWorldMatrix * camView * camProjection);
-		graphicsDeviceContext->UpdateSubresource(cbPerObjectBuffer, 0, nullptr, &cbPerObj, 0, 0);
+		cbPerObject.worldViewProjectionMatrix = XMMatrixTranspose(model->objectWorldMatrix * camView * camProjection);
+		graphicsDeviceContext->UpdateSubresource(cbPerObjectBuffer, 0, nullptr, &cbPerObject, 0, 0);
 		graphicsDeviceContext->VSSetConstantBuffers(0, 1, &cbPerObjectBuffer);
 
 		// material update
@@ -403,18 +571,6 @@ namespace Graphics
 		graphicsDeviceContext->DrawIndexed(
 			static_cast<unsigned int>(model->vertexIndices.size()),
 			0, 0);
-	}
-
-	void updateScene()
-	{
-		//		rot += .01f;
-		//		if (rot > 6.28f)
-		//			rot = 0.0f;
-
-		//		XMVECTOR rotaxis = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-		//		Rotation = XMMatrixRotationAxis(rotaxis, -rot);
-
-		//objectWorldMatrix = Scale;
 	}
 
 	void drawScene()

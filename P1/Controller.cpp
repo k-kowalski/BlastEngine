@@ -88,6 +88,11 @@ namespace Controller
 		previousMousePositionY = mousePositionY;
 	}
 
+	void handleSize(HWND hWnd)
+	{
+		Graphics::resizeBuffers(hWnd);
+	}
+
 	void processRealtimeInput()
 	{
 		if (GetAsyncKeyState(0x57/* W key */) & 0x8000)
@@ -180,6 +185,9 @@ namespace Controller
 //			case 0x44: // D key
 //				break;
 //			}
+		case WM_SIZE:
+			handleSize(hWnd);
+			break;
 		case WM_KEYDOWN:
 			switch (wParam)
 			{

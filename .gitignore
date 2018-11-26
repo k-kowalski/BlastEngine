@@ -9,8 +9,7 @@ x64
 Camera.cpp
 game_engine.xcf
 
-
-
 .gitignore
 .vs
 .git
+BlastEngine.sln

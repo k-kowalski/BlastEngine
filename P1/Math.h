@@ -1,6 +1,8 @@
 #pragma once
 namespace Math
 {
+	const double PI = 3.14159265358979323846;
+
 	struct Vector2
 	{
 		float x, y;
@@ -17,5 +19,7 @@ namespace Math
 	};
 	
 	bool compareReal(double a, double b);
+	float radiansToDegrees(float radians);
+	float degreesToRadians(float radians);
 };
 

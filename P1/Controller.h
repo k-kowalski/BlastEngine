@@ -12,6 +12,6 @@ namespace Controller
 	void handleScroll(WPARAM wParam);
 	void handleENTERPressed();
 	void handleMouseMove(WPARAM w_param, LPARAM l_param);
-	inline void getAsyncKeyDown();
+	void handleSize(HWND hWnd);
 	void processRealtimeInput();
 }

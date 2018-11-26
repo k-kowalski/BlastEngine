@@ -1,12 +1,14 @@
 # Blast Engine
 
-Game engine in C++ (C++11)
+Game engine in C++ (C++17)
+
+![alt text](demo/screen2.png)
+![alt text](demo/screen3.png)
 
 # Features:
-- FBX files import (OpenFBX)
-- texture files import (stbimage)
+- assets import (OpenFBX, stbimage)
+- level editing
 - custom scene format
-- Realtime input, UV mapping and many more!
 
 # Used technologies:
 - DirectX 11

@@ -5,7 +5,7 @@
 * Copyright (c) Microsoft Corp. All rights reserved.                    *
 *                                                                       *
 ************************************************************************/
-
+#pragma warning(push, 0)
 #if defined(_MSC_VER) && (_MSC_VER > 1000)
 #pragma once
 #endif
@@ -3395,3 +3395,4 @@ XMFINLINE XMVECTOR XMVectorInsert(FXMVECTOR VD, FXMVECTOR VS, UINT VSLeftRotateE
 
 #endif // __XNAMATH_H__
 
+#pragma warning(pop)

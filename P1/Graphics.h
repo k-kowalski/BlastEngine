@@ -5,6 +5,7 @@
 #include "Math.h"
 #include "Material.h"
 #include "Model.h"
+#include "Scene.h"
 
 namespace Graphics
 {
@@ -15,14 +16,14 @@ namespace Graphics
 
 		float pitch, yaw, roll;
 
-		//DirectX::XMMATRIX* rotationMatrix;
+		//DirectX::XMMATRIX rotationMatrix;
 	};
 
 	bool initializeGraphics(HWND renderWindowHandle);
 	void shutdownGraphics();
+	void resizeBuffers(HWND renderWindowHandle);
 
 	bool initializeScene();
-	void updateScene();
 	void drawScene();
 
 	void modifyScale(float factor);

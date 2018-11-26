@@ -79,7 +79,7 @@ Scene::Scene(std::string sceneFile)
 	// 1. file identifier string - char*
 	std::array<char, 19> identifier;
 	ReadFile(fileHandle, identifier.data(), identifier.size(), nullptr, nullptr);
-	printf("%s\n", identifier.data());
+	// printf("%s\n", identifier.data());
 	if ( ! std::string(identifier.data())._Equal("Blast Engine Scene"))
 	{
 		Diagnostics::messageBoxInfo("Error while reading - file identifier is invalid.");
@@ -88,7 +88,7 @@ Scene::Scene(std::string sceneFile)
 	// 2. models count - int 4
 	int modelsCount = 0;
 	ReadFile(fileHandle, &modelsCount, sizeof(int), nullptr, nullptr);
-	printf("models count: %d\n", modelsCount);
+	// printf("models count: %d\n", modelsCount);
 
 	//	3. models - ARRAY
 	for (int i = 0; i < modelsCount; ++i)
@@ -102,11 +102,11 @@ Scene::Scene(std::string sceneFile)
 			//printf("%c\n", currentChar);
 			modelName.push_back(currentChar);
 		} while (currentChar != '\0');
-		printf("model name: %s, len: %llu\n", modelName.data(), modelName.size());
+		// printf("model name: %s, len: %llu\n", modelName.data(), modelName.size());
 		// 4. model vertex count - int 4
 		int modelVertexCount = 0;
 		ReadFile(fileHandle, &modelVertexCount, sizeof(int), nullptr, nullptr);
-		printf("modelVertexCount: %d\n", modelVertexCount);
+		// printf("modelVertexCount: %d\n", modelVertexCount);
 		// 5. model vertices - float[3], float[2], float[3]
 		std::vector<Graphics::Vertex> vertices;
 		for (int j = 0; j < modelVertexCount; ++j)
@@ -117,9 +117,9 @@ Scene::Scene(std::string sceneFile)
 			ReadFile(fileHandle, &v.UVcoordinates.x, sizeof(float) * 2, nullptr, nullptr);
 			ReadFile(fileHandle, &v.normal.x, sizeof(float) * 3, nullptr, nullptr);
 
-			printf("vertex pos: x: %f y: %f z: %f\n", v.position.x, v.position.y, v.position.z);
-			printf("vertex UV: x: %f y: %f\n", v.UVcoordinates.x, v.UVcoordinates.y);
-			printf("vertex normal: x: %f y: %f z: %f\n", v.normal.x, v.normal.y, v.normal.z);
+			// printf("vertex pos: x: %f y: %f z: %f\n", v.position.x, v.position.y, v.position.z);
+			// printf("vertex UV: x: %f y: %f\n", v.UVcoordinates.x, v.UVcoordinates.y);
+			// printf("vertex normal: x: %f y: %f z: %f\n", v.normal.x, v.normal.y, v.normal.z);
 
 			vertices.push_back(v);
 		}
@@ -157,11 +157,13 @@ Scene::Scene(std::string sceneFile)
 			delete[] imageData;
 		}
 
+
 		std::unique_ptr<Graphics::Material> currentMaterial = std::make_unique<Graphics::Material>(modelTextures, "texture.hlsl");
 		std::unique_ptr<Graphics::Model> currentModel = std::make_unique<Graphics::Model>(modelName.data(), vertices, vertexIndices, transformMatrix, currentMaterial);
 
 		models.push_back(std::move(currentModel));
 	}
+	CloseHandle(fileHandle);
 }
 
 Scene::Scene()

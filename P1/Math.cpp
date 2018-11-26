@@ -9,4 +9,12 @@ namespace Math
 	{
 		return fabs(a - b) <= std::numeric_limits<double>::epsilon();
 	}
+	float radiansToDegrees(float radians)
+	{
+		return (radians / PI) * 180.0f;
+	}
+	float degreesToRadians(float degrees)
+	{
+		return degrees * (PI / 180.0f);
+	}
 }
