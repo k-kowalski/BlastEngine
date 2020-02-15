@@ -142,7 +142,7 @@ namespace GUI
 			ImGui::SameLine();
 			if (ImGui::Button("Save scene to file"))
 			{
-				currentScene.writeToFile(R"(..\data\1.scene)");
+				currentScene.WriteToFile(R"(..\data\1.scene)");
 			}
 
 			if (ImGui::Button("Init scene"))

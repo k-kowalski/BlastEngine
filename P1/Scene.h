@@ -1,15 +1,17 @@
 #pragma once
 #include "Model.h"
 
-struct Scene
+class Scene
 {
+public:
+	static constexpr const char* SCENE_FILE_IDENTIFIER = "Blast Engine Scene";
 	std::vector<std::unique_ptr<Graphics::Model>> models;
 
-	void writeToFile(std::string sceneFile);
-
 	Scene(std::string sceneFile);
-	Scene();
-	~Scene();
+	Scene() = default;
+	~Scene() = default;
+
+	void WriteToFile(std::string sceneFile);
 
 	Scene& operator=(Scene&& right);
 };

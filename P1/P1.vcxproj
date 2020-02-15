@@ -171,6 +171,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="Util\File.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="xnamath.h" />
   </ItemGroup>
@@ -199,6 +200,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="Util\File.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="color.hlsl">

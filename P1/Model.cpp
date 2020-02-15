@@ -59,8 +59,8 @@ Graphics::Model::Model(std::string name, std::string meshFilePath, std::unique_p
 					Math::compareReal(pair.first->position.y, meshVertices[j].y) &&
 					Math::compareReal(pair.first->position.z, meshVertices[j].z) &&
 					// UVs
-					Math::compareReal(pair.first->UVcoordinates.x, currentUVcoords.x) &&
-					Math::compareReal(pair.first->UVcoordinates.y, currentUVcoords.y) &&
+					Math::compareReal(pair.first->uv.x, currentUVcoords.x) &&
+					Math::compareReal(pair.first->uv.y, currentUVcoords.y) &&
 					// normals
 					Math::compareReal(pair.first->normal.x, meshNormals[j].x) &&
 					Math::compareReal(pair.first->normal.y, meshNormals[j].y) &&
