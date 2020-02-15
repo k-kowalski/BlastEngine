@@ -46,14 +46,13 @@ namespace Platform
 	std::string pickFileDialog(HWND dialogParentWindow, char* filter)
 	{
 		OPENFILENAMEA pickFileStruct;
-		char fileNameBuffer[256];
+		char fileNameBuffer[256] = {0};
 
 		UINT structSize = sizeof(pickFileStruct);
 		ZeroMemory(&pickFileStruct, structSize);
 		pickFileStruct.lStructSize = structSize;
 		pickFileStruct.hwndOwner = dialogParentWindow;
 		pickFileStruct.lpstrFile = fileNameBuffer;
-		pickFileStruct.lpstrFile[0] = '\0';
 		pickFileStruct.nMaxFile = sizeof(fileNameBuffer);
 		pickFileStruct.lpstrFilter = filter;
 		pickFileStruct.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;

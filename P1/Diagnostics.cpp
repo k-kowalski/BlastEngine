@@ -11,13 +11,6 @@ namespace Diagnostics
 
 	void messageBoxInfo(std::string message)
 	{
-		if (&message == nullptr || message.c_str() == nullptr)
-		{
-			MessageBoxA(0, "!!! message is nullptr", "MESSAGE", MB_OK);
-		}
-		else
-		{
-			MessageBoxA(0, message.c_str(), "MESSAGE", MB_OK);
-		}
+		MessageBoxA(0, message.c_str(), "MESSAGE", MB_OK);
 	}
 }
